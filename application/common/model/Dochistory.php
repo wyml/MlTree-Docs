@@ -10,6 +10,15 @@ class Dochistory extends Model
     public function getFileUrlAttr($val,$data)
     {
         $sign = $data['sign'];
-        
     }
+    public function setCreateIpAttr($val)
+    {
+        return \request()->ip();
+    }
+
+    public function setUpdateIpAttr($val)
+    {
+        return \request()->ip();
+    }
+    
 }

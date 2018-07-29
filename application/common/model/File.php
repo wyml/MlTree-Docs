@@ -12,10 +12,9 @@ class File extends Model
     protected static function init()
     {
         clearstatcache();
-        if(!is_writable(config('mtd.doc_path')))
-        {
-            return [false,'Doc目录不可写！'];
-        }elseif(!is_writable(config('mtd.dochistory_path'))){
+        if (!is_writable(config('mtd.doc_path'))) {
+            return [false, 'Doc目录不可写！'];
+        } elseif (!is_writable(config('mtd.dochistory_path'))) {
             return [false, 'DocHistory目录不可写！'];
         }
 
@@ -61,14 +60,14 @@ class File extends Model
      * @param int $type 文件类型 0=正常文件 1=历史文件
      * @return array [true|false,data|errMsg]
      */
-    static function readDoc($sign,$type=0)
+    static function readDoc($sign, $type = 0)
     {
-        $path = self::getUri($sign,$type);
+        $path = self::getUri($sign, $type);
         $data = file_get_contents($path);
         if (empty($data)) {
-            return [false,'文件不存在或权限不足'];
-        }else{
-            return [true,$data];
+            return [false, '文件不存在或权限不足'];
+        } else {
+            return [true, $data];
         }
     }
 
@@ -77,21 +76,43 @@ class File extends Model
      * @param string $sign 文档标识
      * @return array 
      */
-    static function getFileInfor($sign,$type=0)
+    static function getFileInfor($sign, $type = 0)
     {
-        if (!self::fileExists($sign,$type)) {
-            return [false,'文件不存在或权限不足'];
+        if (!self::fileExists($sign, $type)) {
+            return [false, '文件不存在或权限不足'];
         }
-        $path = self::getUri($sign,$type);
+        $path = self::getUri($sign, $type);
         clearstatcache();
         $res = [
             'lastRadeTime' => fileatime($path),
             'lastWriteTime' => filemtime($path),
             'size' => filesize($path),
             'fileType' => filetype($path),
-            'md5' => md5(file_get_contents($path)), 
+            'md5' => md5(file_get_contents($path)),
         ];
-        return [true,$res];
+        return [true, $res];
+    }
+
+    /**
+     * 修改指定Doc内容同时生成历史文档
+     * @param string $sign 文档标识
+     * @param string $data 写入内容
+     * @param int $isHistroy 是否生成历史文档 0=生成 1=不生成 默认0
+     * @return array [true|false,handel|errMsg]
+     */
+    static function writeDoc($sign, $data, $isHistroy = 0)
+    {
+        if (self::fileExists($sign)) {
+            if ($isHistroy == 0) {
+                $res = self::createDocHistroy($sign, $data);
+                return $res;
+            } else {
+                $handel = file_put_contents(self::getUri($sign), $data);
+                return [true, $handel];
+            }
+        } else {
+            return [false, '指定文档不存在'];
+        }
     }
 
     /**
@@ -117,13 +138,14 @@ class File extends Model
         if (!self::fileExists($sign)) {
             return [false, '指定文件不存在'];
         }
+        $uri = $sign . time();
         if (!empty($data)) {
-            $res = copy(self::getUri($sign), self::getUri($sign . time(), 1));
+            $res = copy(self::getUri($sign), self::getUri($uri, 1));
             file_put_contents(self::getUri($data));
-            return [true];
+            return [true, $uri];
         } else {
-            $res = copy(self::getUri($sign), self::getUri($sign . time(), 1));
-            return [true];
+            $res = copy(self::getUri($sign), self::getUri($uri, 1));
+            return [true, $uri];
         }
     }
 
@@ -137,6 +159,10 @@ class File extends Model
     {
         if (!self::fileExists($sign)) {
             return [false, '文档不存在或丢失'];
+        }
+        if ($isHistroy = 1) {
+            unlink(self::getUri($sign));
+            return [true, $hispath];
         }
         $hispath = self::getUri($sign . time(), 1);
         copy(self::getUri($sign), $hispath);

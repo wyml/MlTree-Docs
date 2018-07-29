@@ -4,6 +4,7 @@ namespace app\commmon\model;
 use think\Model;
 use app\common\model\File;
 use app\common\model\Option;
+use app\common\model\Dochistroy;
 
 class Docs extends Model
 {
@@ -34,7 +35,7 @@ class Docs extends Model
     static function createDoc($docName, $sign, $data = null, $type = 1)
     {
         if (!isLogin()) {
-            return [false,'权限不足'];
+            return [false, '权限不足'];
         }
         if (Option::getValue('initDoc') == 1) {
             if (empty($data)) {
@@ -50,12 +51,63 @@ class Docs extends Model
                 'type' => $type
             ];
             $res = self::create($data);
-            return [true,$res->did];
+            return [true, $res->did];
         }
     }
 
-    static function updateDoc($sign,$data)
+    static function updateDoc($did, $data)
     {
-        
+        if (!isLogin()) {
+            return [false, '权限不足'];
+        }
+        $doc = self::get($did);
+        if (empty($dic)) {
+            return [false, '文档不存在'];
+        }
+
+        if (Option::getValue('autoHistory') == 1) {
+            $res = File::writeDoc($doc->sign, $data, 0);
+            $update_hid = Dochistory::where('did', $did)->max('hid');
+            $hisIn = [
+                'did' => $did,
+                'update_hid' => $update_hid,
+                'update_uid' => session('uid'),
+                'sign' => $res[1],
+            ];
+            Dochistory::update($hisIn);
+        } else {
+            $res = File::writeDoc($doc->sign, $data, 1);
+        }
+        return [true, '更新成功'];
+    }
+
+    static function readDoc($did = null, $sign = null, $type = 0)
+    {
+        if (empty($did) && empty($sign)) {
+            return [false, '标识不能为空'];
+        }
+        if (!empty($did)) {
+            $res = self::get($did);
+            $data = File::readDoc($res->sign, $type);
+            return [true, $data];
+        } else {
+            $data = File::readDoc($sign, $type);
+            return [true, $data];
+        }
+    }
+
+    static function delDoc($sign)
+    {
+        $doc = self::where('sign',$sign)->find();
+        if (empty($doc)) {
+            return [false,'文档不存在'];
+        }
+        if (Option::getValue('delHistory') != 1) {
+            File::delFile($sign,1);
+            self::delete($doc->did);
+            return [true,'删除完成'];
+        }
+        $res = File::delFile($sign);
+        return $res;
     }
 }
