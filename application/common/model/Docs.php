@@ -5,6 +5,7 @@ use think\Model;
 use app\common\model\File;
 use app\common\model\Option;
 use app\common\model\Dochistroy;
+use app\common\model\Book;
 
 class Docs extends Model
 {
@@ -32,7 +33,7 @@ class Docs extends Model
         return $type[$data['type']];
     }
 
-    static function createDoc($docName, $sign, $data = null, $type = 1)
+    static function createDoc($bid, $docName, $sign, $pid = 0, $data = null, $type = 1)
     {
         if (!isLogin()) {
             return [false, '权限不足'];
@@ -47,6 +48,8 @@ class Docs extends Model
             $fileIni = File::getFileInfor($sign);
             $data = [
                 'uid' => session('uid'),
+                'bid' => $bid,
+                'pid' => $pid,
                 'sign' => $fileIni[1]['md5'],
                 'type' => $type
             ];
@@ -98,16 +101,36 @@ class Docs extends Model
 
     static function delDoc($sign)
     {
-        $doc = self::where('sign',$sign)->find();
+        $doc = self::where('sign', $sign)->find();
         if (empty($doc)) {
-            return [false,'文档不存在'];
+            return [false, '文档不存在'];
         }
         if (Option::getValue('delHistory') != 1) {
-            File::delFile($sign,1);
+            File::delFile($sign, 1);
             self::delete($doc->did);
-            return [true,'删除完成'];
+            return [true, '删除完成'];
         }
         $res = File::delFile($sign);
         return $res;
+    }
+
+    static function getCatalog($bid)
+    {
+        $book = Book::get($bid);
+        if (empty($book)) {
+            return [false, '未查询到此书本'];
+        }
+        if($book->firstDoc == 0)//找到指定书本但是内部无文章
+        {
+            return [true,''];
+        }
+        $doc = self::where('bid', $bid)->select();
+        foreach ($doc as $key => $value) {
+            if ($value['pid'] == $book->firstDoc) {
+                $value['pid'] = self::getCatalog($value['did']);
+                $tree[] = $value;
+            }
+        }
+        return [true,$tree];
     }
 }

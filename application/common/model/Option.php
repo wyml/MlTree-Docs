@@ -2,6 +2,7 @@
 namespace app\common\model;
 
 use think\Model;
+use think\Db;
 
 class Option extends Model
 {

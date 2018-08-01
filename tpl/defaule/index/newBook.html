@@ -1,0 +1,42 @@
+{extend name="defaule/public/main_doc"}{block name="main"}
+<div class="mdui-container">
+    <div class="mdui-row">
+        <div class="mdui-col-xs-12">
+            <div class="mdui-card">
+                <div class="mdui-card-header">
+                    <h1 class="mdui-card-header-title">创建书本</h1>
+                </div>
+                <div class="mdui-card-content">
+                    <form action="" method="post">
+                        <div class="mdui-textfield">
+                            <label class="mdui-textfield-label">书本名称</label>
+                            <input class="mdui-textfield-input" required name="name" type="text" />
+                            <div class="mdui-textfield-error">书本名称不能为空</div>
+                        </div>
+                        <div class="mdui-textfield">
+                            <label class="mdui-textfield-label">书本介绍</label>
+                            <textarea class="mdui-textfield-input"></textarea>
+                        </div>
+                        <div class="mdui-textfield">
+                            <label class="mdui-textfield-label">书本首页</label>
+                            <input class="mdui-textfield-input" name="firstDoc" type="text" />
+                        </div>
+
+                        <h4>可见性：<small>书本可见性，不影响文档的可见性。因此在没有登陆的情况下，任何人无法读取公开书本中的私有文档</small></h4>
+                        <label class="mdui-radio">
+                            <input type="radio" name="type" checked/>
+                            <i class="mdui-radio-icon"></i>公开
+                        </label>
+                        <br>
+                        <label class="mdui-radio">
+                            <input type="radio" name="type" />
+                            <i class="mdui-radio-icon"></i>私有
+                        </label>
+                        <button type="submit" class="mdui-btn mdui-btn-block mdui-color-theme-accent mdui-ripple">创建书本</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{/block} {block name="js"} {/block}
