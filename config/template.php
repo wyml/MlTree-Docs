@@ -39,6 +39,7 @@ return [
         '__CSS__' => '/static/css',
         '__IMG__' => '/static/images',
         '__JQ__' => '/static/js/jquery-3.3.1.min.js',
-        '__EDITOR__' => '/static/editor/'
+        '__EDITOR__' => '/static/editor/',
+        '__LAYUI__' => '/static/layui/',
     ]
 ];
